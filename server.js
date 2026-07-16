@@ -41,10 +41,18 @@ const FRIENDLY_OPEN_PROMPT = `You are a warm, easygoing, genuinely conversationa
 // In-memory conversation history (resets if server restarts)
 // ---------------------------------------------------------
 const conversationHistory = {};
+const MAX_HISTORY_TURNS = 10;
 
 function getHistory(number) {
   if (!conversationHistory[number]) conversationHistory[number] = [];
   return conversationHistory[number];
+}
+
+function trimHistory(history) {
+  const maxMessages = MAX_HISTORY_TURNS * 2;
+  if (history.length > maxMessages) {
+    history.splice(0, history.length - maxMessages);
+  }
 }
 
 // ---------------------------------------------------------
@@ -89,6 +97,7 @@ app.post("/webhook", async (req, res) => {
     // Save to history
     history.push({ role: "user", content: incomingMsg });
     history.push({ role: "assistant", content: replyText });
+    trimHistory(history);
 
     res.set("Content-Type", "text/xml");
     res.send(`
